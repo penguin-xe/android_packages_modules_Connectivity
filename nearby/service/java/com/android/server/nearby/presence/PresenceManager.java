@@ -23,8 +23,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.nearby.DataElement;
 import android.nearby.NearbyDevice;
 import android.nearby.NearbyManager;
+import android.nearby.PresenceDevice;
 import android.nearby.PresenceScanFilter;
 import android.nearby.PublicCredential;
 import android.nearby.ScanCallback;
@@ -36,6 +38,8 @@ import androidx.annotation.NonNull;
 import com.android.server.nearby.common.locator.Locator;
 import com.android.server.nearby.common.locator.LocatorContextWrapper;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 
@@ -51,6 +55,14 @@ public class PresenceManager {
                 @Override
                 public void onDiscovered(@NonNull NearbyDevice device) {
                     Log.i(TAG, "[PresenceManager] discovered Device.");
+                    PresenceDevice presenceDevice = (PresenceDevice) device;
+                    List<DataElement> dataElements = presenceDevice.getExtendedProperties();
+                    for (DataElement dataElement : presenceDevice.getExtendedProperties()) {
+                        Log.i(TAG, "[PresenceManager] Data Element key "
+                                + dataElement.getKey());
+                        Log.i(TAG, "[PresenceManager] Data Element value "
+                                + Arrays.toString(dataElement.getValue()));
+                    }
                 }
 
                 @Override
@@ -70,32 +82,24 @@ public class PresenceManager {
                         return;
                     }
                     if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                        Log.d(TAG, "Start CHRE scan.");
-                        byte[] secreteId = {1, 0, 0, 0};
-                        byte[] authenticityKey = {2, 0, 0, 0};
-                        byte[] publicKey = {3, 0, 0, 0};
-                        byte[] encryptedMetaData = {4, 0, 0, 0};
-                        byte[] encryptedMetaDataTag = {5, 0, 0, 0};
+                        Log.d(TAG, "PresenceManager Start scan.");
                         PublicCredential publicCredential =
-                                new PublicCredential.Builder(
-                                                secreteId,
-                                                authenticityKey,
-                                                publicKey,
-                                                encryptedMetaData,
-                                                encryptedMetaDataTag)
-                                        .build();
+                                new PublicCredential.Builder(new byte[]{1}, new byte[]{1},
+                                        new byte[]{1}, new byte[]{1}, new byte[]{1}).build();
                         PresenceScanFilter presenceScanFilter =
                                 new PresenceScanFilter.Builder()
                                         .setMaxPathLoss(3)
                                         .addCredential(publicCredential)
                                         .addPresenceAction(1)
+                                        .addExtendedProperty(new DataElement(
+                                                DataElement.DataType.ACCOUNT_KEY, new byte[16]))
                                         .build();
                         ScanRequest scanRequest =
                                 new ScanRequest.Builder()
                                         .setScanType(ScanRequest.SCAN_TYPE_NEARBY_PRESENCE)
                                         .addScanFilter(presenceScanFilter)
                                         .build();
-                        Log.i(
+                        Log.d(
                                 TAG,
                                 String.format(
                                         Locale.getDefault(),
@@ -104,7 +108,7 @@ public class PresenceManager {
                         manager.startScan(
                                 scanRequest, Executors.newSingleThreadExecutor(), mScanCallback);
                     } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                        Log.d(TAG, "Stop CHRE scan.");
+                        Log.d(TAG, "PresenceManager Stop scan.");
                         manager.stopScan(mScanCallback);
                     }
                 }

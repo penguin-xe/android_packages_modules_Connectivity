@@ -29,6 +29,7 @@ import static android.net.NetworkStats.TAG_NONE;
 import static android.net.NetworkStats.UID_ALL;
 
 import static com.android.server.net.NetworkStatsFactory.kernelToTag;
+import static com.android.testutils.DevSdkIgnoreRuleKt.SC_V2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -38,12 +39,12 @@ import android.content.res.Resources;
 import android.net.NetworkStats;
 import android.net.TrafficStats;
 import android.net.UnderlyingNetworkInfo;
-import android.os.Build;
 
 import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
 
 import com.android.frameworks.tests.net.R;
+import com.android.server.BpfNetMaps;
 import com.android.testutils.DevSdkIgnoreRule;
 import com.android.testutils.DevSdkIgnoreRunner;
 
@@ -67,13 +68,14 @@ import java.io.OutputStream;
 /** Tests for {@link NetworkStatsFactory}. */
 @RunWith(DevSdkIgnoreRunner.class)
 @SmallTest
-@DevSdkIgnoreRule.IgnoreUpTo(Build.VERSION_CODES.R)
+@DevSdkIgnoreRule.IgnoreUpTo(SC_V2)
 public class NetworkStatsFactoryTest extends NetworkStatsBaseTest {
     private static final String CLAT_PREFIX = "v4-";
 
     private File mTestProc;
     private NetworkStatsFactory mFactory;
     @Mock private Context mContext;
+    @Mock private BpfNetMaps mBpfNetMaps;
 
     @Before
     public void setUp() throws Exception {
@@ -84,7 +86,7 @@ public class NetworkStatsFactoryTest extends NetworkStatsBaseTest {
         // applications. So in order to have a test support native library, the native code
         // related to networkStatsFactory is compiled to a minimal native library and loaded here.
         System.loadLibrary("networkstatsfactorytestjni");
-        mFactory = new NetworkStatsFactory(mContext, mTestProc, false);
+        mFactory = new NetworkStatsFactory(mContext, mTestProc, false, mBpfNetMaps);
         mFactory.updateUnderlyingNetworkInfos(new UnderlyingNetworkInfo[0]);
     }
 

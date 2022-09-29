@@ -556,7 +556,7 @@ public class ConnectivityManager {
      *
      * @deprecated Applications should instead use {@link NetworkCapabilities#hasTransport} or
      *         {@link #requestNetwork(NetworkRequest, NetworkCallback)} to request an
-     *         appropriate network. {@see NetworkCapabilities} for supported transports.
+     *         appropriate network. See {@link NetworkCapabilities} for supported transports.
      */
     @Deprecated
     public static final int TYPE_MOBILE      = 0;
@@ -566,7 +566,7 @@ public class ConnectivityManager {
      *
      * @deprecated Applications should instead use {@link NetworkCapabilities#hasTransport} or
      *         {@link #requestNetwork(NetworkRequest, NetworkCallback)} to request an
-     *         appropriate network. {@see NetworkCapabilities} for supported transports.
+     *         appropriate network. See {@link NetworkCapabilities} for supported transports.
      */
     @Deprecated
     public static final int TYPE_WIFI        = 1;
@@ -617,7 +617,7 @@ public class ConnectivityManager {
      *
      * @deprecated Applications should instead use {@link NetworkCapabilities#hasTransport} or
      *         {@link #requestNetwork(NetworkRequest, NetworkCallback)} to request an
-     *         appropriate network. {@see NetworkCapabilities} for supported transports.
+     *         appropriate network. See {@link NetworkCapabilities} for supported transports.
      */
     @Deprecated
     public static final int TYPE_MOBILE_HIPRI = 5;
@@ -627,7 +627,7 @@ public class ConnectivityManager {
      *
      * @deprecated Applications should instead use {@link NetworkCapabilities#hasTransport} or
      *         {@link #requestNetwork(NetworkRequest, NetworkCallback)} to request an
-     *         appropriate network. {@see NetworkCapabilities} for supported transports.
+     *         appropriate network. See {@link NetworkCapabilities} for supported transports.
      */
     @Deprecated
     public static final int TYPE_WIMAX       = 6;
@@ -637,7 +637,7 @@ public class ConnectivityManager {
      *
      * @deprecated Applications should instead use {@link NetworkCapabilities#hasTransport} or
      *         {@link #requestNetwork(NetworkRequest, NetworkCallback)} to request an
-     *         appropriate network. {@see NetworkCapabilities} for supported transports.
+     *         appropriate network. See {@link NetworkCapabilities} for supported transports.
      */
     @Deprecated
     public static final int TYPE_BLUETOOTH   = 7;
@@ -654,7 +654,7 @@ public class ConnectivityManager {
      *
      * @deprecated Applications should instead use {@link NetworkCapabilities#hasTransport} or
      *         {@link #requestNetwork(NetworkRequest, NetworkCallback)} to request an
-     *         appropriate network. {@see NetworkCapabilities} for supported transports.
+     *         appropriate network. See {@link NetworkCapabilities} for supported transports.
      */
     @Deprecated
     public static final int TYPE_ETHERNET    = 9;
@@ -982,6 +982,30 @@ public class ConnectivityManager {
     @SystemApi(client = MODULE_LIBRARIES)
     public static final int FIREWALL_CHAIN_LOW_POWER_STANDBY = 5;
 
+    /**
+     * Firewall chain used for OEM-specific application restrictions.
+     * Denylist of apps that will not have network access due to OEM-specific restrictions.
+     * @hide
+     */
+    @SystemApi(client = MODULE_LIBRARIES)
+    public static final int FIREWALL_CHAIN_OEM_DENY_1 = 7;
+
+    /**
+     * Firewall chain used for OEM-specific application restrictions.
+     * Denylist of apps that will not have network access due to OEM-specific restrictions.
+     * @hide
+     */
+    @SystemApi(client = MODULE_LIBRARIES)
+    public static final int FIREWALL_CHAIN_OEM_DENY_2 = 8;
+
+    /**
+     * Firewall chain used for OEM-specific application restrictions.
+     * Denylist of apps that will not have network access due to OEM-specific restrictions.
+     * @hide
+     */
+    @SystemApi(client = MODULE_LIBRARIES)
+    public static final int FIREWALL_CHAIN_OEM_DENY_3 = 9;
+
     /** @hide */
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = false, prefix = "FIREWALL_CHAIN_", value = {
@@ -989,7 +1013,10 @@ public class ConnectivityManager {
         FIREWALL_CHAIN_STANDBY,
         FIREWALL_CHAIN_POWERSAVE,
         FIREWALL_CHAIN_RESTRICTED,
-        FIREWALL_CHAIN_LOW_POWER_STANDBY
+        FIREWALL_CHAIN_LOW_POWER_STANDBY,
+        FIREWALL_CHAIN_OEM_DENY_1,
+        FIREWALL_CHAIN_OEM_DENY_2,
+        FIREWALL_CHAIN_OEM_DENY_3
     })
     public @interface FirewallChain {}
     // LINT.ThenChange(packages/modules/Connectivity/service/native/include/Common.h)
@@ -1177,7 +1204,7 @@ public class ConnectivityManager {
 
     /**
      * Preference for {@link ProfileNetworkPreference#setPreference(int)}.
-     * {@see #setProfileNetworkPreferences(UserHandle, List, Executor, Runnable)}
+     * See {@link #setProfileNetworkPreferences(UserHandle, List, Executor, Runnable)}
      * Specify that the traffic for this user should by follow the default rules.
      * @hide
      */
@@ -1186,7 +1213,7 @@ public class ConnectivityManager {
 
     /**
      * Preference for {@link ProfileNetworkPreference#setPreference(int)}.
-     * {@see #setProfileNetworkPreferences(UserHandle, List, Executor, Runnable)}
+     * See {@link #setProfileNetworkPreferences(UserHandle, List, Executor, Runnable)}
      * Specify that the traffic for this user should by default go on a network with
      * {@link NetworkCapabilities#NET_CAPABILITY_ENTERPRISE}, and on the system default network
      * if no such network is available.
@@ -1197,7 +1224,7 @@ public class ConnectivityManager {
 
     /**
      * Preference for {@link ProfileNetworkPreference#setPreference(int)}.
-     * {@see #setProfileNetworkPreferences(UserHandle, List, Executor, Runnable)}
+     * See {@link #setProfileNetworkPreferences(UserHandle, List, Executor, Runnable)}
      * Specify that the traffic for this user should by default go on a network with
      * {@link NetworkCapabilities#NET_CAPABILITY_ENTERPRISE} and if no such network is available
      * should not go on the system default network
@@ -3356,8 +3383,8 @@ public class ConnectivityManager {
      * proxy is likely to break networking on multiple networks. This method is only meant
      * for device policy clients looking to do general internal filtering or similar use cases.
      *
-     * {@see #getGlobalProxy}
-     * {@see LinkProperties#getHttpProxy}
+     * @see #getGlobalProxy
+     * @see LinkProperties#getHttpProxy
      *
      * @param p A {@link ProxyInfo} object defining the new global HTTP proxy. Calling this
      *          method with a {@code null} value will clear the global HTTP proxy.
@@ -4250,7 +4277,7 @@ public class ConnectivityManager {
      * network, unless it becomes the best again at some later time. All callbacks are invoked
      * in order on the same thread, which by default is a thread created by the framework running
      * in the app.
-     * {@see #requestNetwork(NetworkRequest, NetworkCallback, Handler)} to change where the
+     * See {@link #requestNetwork(NetworkRequest, NetworkCallback, Handler)} to change where the
      * callbacks are invoked.
      *
      * <p>This{@link NetworkRequest} will live until released via
@@ -5876,6 +5903,7 @@ public class ConnectivityManager {
      *
      * @param chain target chain.
      * @param enable whether the chain should be enabled.
+     * @throws UnsupportedOperationException if called on pre-T devices.
      * @throws IllegalStateException if enabling or disabling the firewall chain failed.
      * @hide
      */
@@ -5888,6 +5916,29 @@ public class ConnectivityManager {
     public void setFirewallChainEnabled(@FirewallChain final int chain, final boolean enable) {
         try {
             mService.setFirewallChainEnabled(chain, enable);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Get the specified firewall chain's status.
+     *
+     * @param chain target chain.
+     * @return {@code true} if chain is enabled, {@code false} if chain is disabled.
+     * @throws UnsupportedOperationException if called on pre-T devices.
+     * @throws ServiceSpecificException in case of failure, with an error code indicating the
+     *                                  cause of the failure.
+     * @hide
+     */
+    @RequiresPermission(anyOf = {
+            android.Manifest.permission.NETWORK_SETTINGS,
+            android.Manifest.permission.NETWORK_STACK,
+            NetworkStack.PERMISSION_MAINLINE_NETWORK_STACK
+    })
+    public boolean getFirewallChainEnabled(@FirewallChain final int chain) {
+        try {
+            return mService.getFirewallChainEnabled(chain);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

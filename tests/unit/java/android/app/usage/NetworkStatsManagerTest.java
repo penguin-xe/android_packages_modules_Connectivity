@@ -16,6 +16,10 @@
 
 package android.app.usage;
 
+import static android.net.NetworkStats.METERED_YES;
+import static android.net.NetworkTemplate.MATCH_MOBILE;
+import static android.net.NetworkTemplate.MATCH_WIFI;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -52,9 +56,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 
+import java.util.Set;
+
 @RunWith(DevSdkIgnoreRunner.class)
 @SmallTest
-@DevSdkIgnoreRule.IgnoreUpTo(Build.VERSION_CODES.R)
+@DevSdkIgnoreRule.IgnoreUpTo(Build.VERSION_CODES.S_V2)
 public class NetworkStatsManagerTest {
     private static final String TEST_SUBSCRIBER_ID = "subid";
 
@@ -204,20 +210,20 @@ public class NetworkStatsManagerTest {
     @Test
     public void testNetworkTemplateWhenRunningQueryDetails_NoSubscriberId() throws RemoteException {
         runQueryDetailsAndCheckTemplate(ConnectivityManager.TYPE_MOBILE,
-                null /* subscriberId */, NetworkTemplate.buildTemplateMobileWildcard());
+                null /* subscriberId */, new NetworkTemplate.Builder(MATCH_MOBILE)
+                        .setMeteredness(METERED_YES).build());
         runQueryDetailsAndCheckTemplate(ConnectivityManager.TYPE_WIFI,
-                "" /* subscriberId */, NetworkTemplate.buildTemplateWifiWildcard());
+                "" /* subscriberId */, new NetworkTemplate.Builder(MATCH_WIFI).build());
         runQueryDetailsAndCheckTemplate(ConnectivityManager.TYPE_WIFI,
-                null /* subscriberId */, NetworkTemplate.buildTemplateWifiWildcard());
+                null /* subscriberId */, new NetworkTemplate.Builder(MATCH_WIFI).build());
     }
 
     @Test
     public void testNetworkTemplateWhenRunningQueryDetails_MergedCarrierWifi()
             throws RemoteException {
         runQueryDetailsAndCheckTemplate(ConnectivityManager.TYPE_WIFI,
-                TEST_SUBSCRIBER_ID,
-                NetworkTemplate.buildTemplateWifi(NetworkTemplate.WIFI_NETWORKID_ALL,
-                        TEST_SUBSCRIBER_ID));
+                TEST_SUBSCRIBER_ID, new NetworkTemplate.Builder(MATCH_WIFI)
+                        .setSubscriberIds(Set.of(TEST_SUBSCRIBER_ID)).build());
     }
 
     @Test

@@ -54,6 +54,7 @@ import com.android.server.nearby.util.permissions.DiscoveryPermissions;
 /** Service implementing nearby functionality. */
 public class NearbyService extends INearbyManager.Stub {
     public static final String TAG = "NearbyService";
+    public static final Boolean MANUAL_TEST = false;
 
     private final Context mContext;
     private Injector mInjector;
@@ -110,22 +111,36 @@ public class NearbyService extends INearbyManager.Stub {
     }
 
     @Override
-    public void unregisterScanListener(IScanListener listener) {
+    public void unregisterScanListener(IScanListener listener, String packageName,
+            @Nullable String attributionTag) {
+        // Permissions check
+        enforceBluetoothPrivilegedPermission(mContext);
+        CallerIdentity identity = CallerIdentity.fromBinder(mContext, packageName, attributionTag);
+        DiscoveryPermissions.enforceDiscoveryPermission(mContext, identity);
+
         mProviderManager.unregisterScanListener(listener);
     }
 
     @Override
     public void startBroadcast(BroadcastRequestParcelable broadcastRequestParcelable,
             IBroadcastListener listener, String packageName, @Nullable String attributionTag) {
+        // Permissions check
         enforceBluetoothPrivilegedPermission(mContext);
         BroadcastPermissions.enforceBroadcastPermission(
                 mContext, CallerIdentity.fromBinder(mContext, packageName, attributionTag));
+
         mBroadcastProviderManager.startBroadcast(
                 broadcastRequestParcelable.getBroadcastRequest(), listener);
     }
 
     @Override
-    public void stopBroadcast(IBroadcastListener listener) {
+    public void stopBroadcast(IBroadcastListener listener, String packageName,
+            @Nullable String attributionTag) {
+        // Permissions check
+        enforceBluetoothPrivilegedPermission(mContext);
+        CallerIdentity identity = CallerIdentity.fromBinder(mContext, packageName, attributionTag);
+        BroadcastPermissions.enforceBroadcastPermission(mContext, identity);
+
         mBroadcastProviderManager.stopBroadcast(listener);
     }
 
@@ -152,11 +167,15 @@ public class NearbyService extends INearbyManager.Stub {
                     // Initialize ContextManager for CHRE scan.
                     ((SystemInjector) mInjector).initializeContextHubManagerAdapter();
                 }
+                mProviderManager.init();
                 mContext.registerReceiver(
                         mBluetoothReceiver,
                         new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
                 mFastPairManager.initiate();
-                mPresenceManager.initiate();
+                // Only enable for manual Presence test on device.
+                if (MANUAL_TEST) {
+                    mPresenceManager.initiate();
+                }
                 break;
         }
     }

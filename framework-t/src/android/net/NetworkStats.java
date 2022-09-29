@@ -1041,7 +1041,7 @@ public final class NetworkStats implements Parcelable, Iterable<NetworkStats.Ent
      */
     public long getTotalPackets() {
         long total = 0;
-        for (int i = size-1; i >= 0; i--) {
+        for (int i = size - 1; i >= 0; i--) {
             total += rxPackets[i] + txPackets[i];
         }
         return total;
@@ -1297,6 +1297,17 @@ public final class NetworkStats implements Parcelable, Iterable<NetworkStats.Ent
         ret.filter(e -> e.rxBytes != 0 || e.rxPackets != 0 || e.txBytes != 0 || e.txPackets != 0
                 || e.operations != 0);
         return ret;
+    }
+
+    /**
+     * Removes the interface name from all entries.
+     * This mutates the original structure in place.
+     * @hide
+     */
+    public void clearInterfaces() {
+        for (int i = 0; i < size; i++) {
+            iface[i] = null;
+        }
     }
 
     /**

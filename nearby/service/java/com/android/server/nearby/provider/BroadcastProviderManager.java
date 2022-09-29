@@ -16,6 +16,7 @@
 
 package com.android.server.nearby.provider;
 
+import android.annotation.Nullable;
 import android.content.Context;
 import android.nearby.BroadcastCallback;
 import android.nearby.BroadcastRequest;
@@ -27,6 +28,8 @@ import android.util.Log;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.nearby.NearbyConfiguration;
 import com.android.server.nearby.injector.Injector;
+import com.android.server.nearby.presence.Advertisement;
+import com.android.server.nearby.presence.ExtendedAdvertisement;
 import com.android.server.nearby.presence.FastAdvertisement;
 import com.android.server.nearby.util.ForegroundThread;
 
@@ -65,28 +68,40 @@ public class BroadcastProviderManager implements BleBroadcastProvider.BroadcastL
      */
     public void startBroadcast(BroadcastRequest broadcastRequest, IBroadcastListener listener) {
         synchronized (mLock) {
-            NearbyConfiguration configuration = new NearbyConfiguration();
-            if (!configuration.isPresenceBroadcastLegacyEnabled()) {
-                reportBroadcastStatus(listener, BroadcastCallback.STATUS_FAILURE);
-                return;
-            }
-            if (broadcastRequest.getType() != BroadcastRequest.BROADCAST_TYPE_NEARBY_PRESENCE) {
-                reportBroadcastStatus(listener, BroadcastCallback.STATUS_FAILURE);
-                return;
-            }
-            PresenceBroadcastRequest presenceBroadcastRequest =
-                    (PresenceBroadcastRequest) broadcastRequest;
-            if (presenceBroadcastRequest.getVersion() != BroadcastRequest.PRESENCE_VERSION_V0) {
-                reportBroadcastStatus(listener, BroadcastCallback.STATUS_FAILURE);
-                return;
-            }
-            FastAdvertisement fastAdvertisement = FastAdvertisement.createFromRequest(
-                    presenceBroadcastRequest);
-            byte[] advertisementPackets = fastAdvertisement.toBytes();
-            mBroadcastListener = listener;
             mExecutor.execute(() -> {
-                mBleBroadcastProvider.start(advertisementPackets, this);
+                NearbyConfiguration configuration = new NearbyConfiguration();
+                if (!configuration.isPresenceBroadcastLegacyEnabled()) {
+                    reportBroadcastStatus(listener, BroadcastCallback.STATUS_FAILURE);
+                    return;
+                }
+                if (broadcastRequest.getType() != BroadcastRequest.BROADCAST_TYPE_NEARBY_PRESENCE) {
+                    reportBroadcastStatus(listener, BroadcastCallback.STATUS_FAILURE);
+                    return;
+                }
+                PresenceBroadcastRequest presenceBroadcastRequest =
+                        (PresenceBroadcastRequest) broadcastRequest;
+                Advertisement advertisement = getAdvertisement(presenceBroadcastRequest);
+                if (advertisement == null) {
+                    Log.e(TAG, "Failed to start broadcast because broadcastRequest is illegal.");
+                    reportBroadcastStatus(listener, BroadcastCallback.STATUS_FAILURE);
+                    return;
+                }
+                mBroadcastListener = listener;
+                mBleBroadcastProvider.start(presenceBroadcastRequest.getVersion(),
+                        advertisement.toBytes(), this);
             });
+        }
+    }
+
+    @Nullable
+    private Advertisement getAdvertisement(PresenceBroadcastRequest request) {
+        switch (request.getVersion()) {
+            case BroadcastRequest.PRESENCE_VERSION_V0:
+                return FastAdvertisement.createFromRequest(request);
+            case BroadcastRequest.PRESENCE_VERSION_V1:
+                return ExtendedAdvertisement.createFromRequest(request);
+            default:
+                return null;
         }
     }
 

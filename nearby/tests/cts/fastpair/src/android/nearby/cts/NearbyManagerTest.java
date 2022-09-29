@@ -128,6 +128,14 @@ public class NearbyManagerTest {
 
     @Test
     @SdkSuppress(minSdkVersion = 32, codeName = "T")
+    public void test_stopScan_noPrivilegedPermission() {
+        mNearbyManager.startScan(mScanRequest, EXECUTOR, mScanCallback);
+        mUiAutomation.dropShellPermissionIdentity();
+        assertThrows(SecurityException.class, () -> mNearbyManager.stopScan(mScanCallback));
+    }
+
+    @Test
+    @SdkSuppress(minSdkVersion = 32, codeName = "T")
     public void testStartStopBroadcast() throws InterruptedException {
         PrivateCredential credential = new PrivateCredential.Builder(SECRETE_ID, AUTHENTICITY_KEY,
                 META_DATA_ENCRYPTION_KEY, DEVICE_NAME)
@@ -148,6 +156,15 @@ public class NearbyManagerTest {
                 callback);
         latch.await(10, TimeUnit.SECONDS);
         mNearbyManager.stopBroadcast(callback);
+    }
+
+    @Test
+    @SdkSuppress(minSdkVersion = 32, codeName = "T")
+    public void setFastPairScanEnabled() {
+        mNearbyManager.setFastPairScanEnabled(mContext, true);
+        assertThat(mNearbyManager.getFastPairScanEnabled(mContext)).isTrue();
+        mNearbyManager.setFastPairScanEnabled(mContext, false);
+        assertThat(mNearbyManager.getFastPairScanEnabled(mContext)).isFalse();
     }
 
     private void enableBluetooth() {
